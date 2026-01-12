@@ -64,21 +64,24 @@ npm run dev
 POST /api/compress
 ```
 
-Compress a video file using server-side FFmpeg.
+Compress a video file or video from URL using server-side FFmpeg.
 
-#### Parameters (multipart/form-data)
+#### Parameters (multipart/form-data or JSON)
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `video` | file | Yes | - | Video file (MP4, MOV, AVI) |
+| `video` | file | No* | - | Video file (MP4, MOV, AVI) - *required if url not provided |
+| `url` | string | No* | - | Video URL (direct link or cloud storage) - *required if video not provided |
 | `quality` | number | No | 23 | CRF value (18-28). Lower = higher quality |
 | `resolution` | string | No | original | Target resolution: `original`, `1080`, `720` |
 | `preset` | string | No | medium | Encoding speed: `fast`, `medium`, `slow` |
 
+**Note:** Provide either a `video` file OR a `url`, not both.
+
 #### Response
 Returns the compressed video file as binary data (video/mp4).
 
-#### Example: cURL
+#### Example: cURL (File Upload)
 ```bash
 curl -X POST http://localhost:3001/api/compress \
   -F "video=@/path/to/video.mp4" \
@@ -88,10 +91,42 @@ curl -X POST http://localhost:3001/api/compress \
   -o compressed_video.mp4
 ```
 
-#### Example: JavaScript
+#### Example: cURL (From URL)
+```bash
+curl -X POST http://localhost:3001/api/compress \
+  -F "url=https://example.com/video.mp4" \
+  -F "quality=23" \
+  -F "resolution=1080" \
+  -F "preset=medium" \
+  -o compressed_video.mp4
+```
+
+#### Example: JavaScript (File Upload)
 ```javascript
 const formData = new FormData();
 formData.append('video', fileInput.files[0]);
+formData.append('quality', '23');
+formData.append('resolution', '1080');
+formData.append('preset', 'medium');
+
+const response = await fetch('http://localhost:3001/api/compress', {
+  method: 'POST',
+  body: formData
+});
+
+const blob = await response.blob();
+// Download the compressed video
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'compressed_video.mp4';
+a.click();
+```
+
+#### Example: JavaScript (From URL)
+```javascript
+const formData = new FormData();
+formData.append('url', 'https://example.com/video.mp4');
 formData.append('quality', '23');
 formData.append('resolution', '1080');
 formData.append('preset', 'medium');
@@ -133,9 +168,16 @@ with open('video.mp4', 'rb') as f:
 ```
 
 #### Test the API
-We've included a test script:
+We've included test scripts:
+
+**Test with local file:**
 ```bash
 node test-api.js videos/Bootcamp\ Video\ 1_v2.mp4
+```
+
+**Test with URL:**
+```bash
+node test-url-api.js https://example.com/video.mp4
 ```
 
 ### Other API Endpoints
@@ -154,7 +196,9 @@ Returns server health status.
 
 ## How the Browser Version Works
 
-1. **Upload** - Drag and drop or click to select a video file (100MB-1GB)
+1. **Upload** - Choose one of two methods:
+   - **File Upload:** Drag and drop or click to select a video file (100MB-1GB)
+   - **From URL:** Enter a URL to a video on the cloud or direct link
 2. **Configure** - Choose quality, resolution, and speed settings
 3. **Compress** - Processing happens entirely in your browser (no upload to server)
 4. **Download** - Get your compressed video file

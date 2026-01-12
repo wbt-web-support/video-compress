@@ -4,8 +4,20 @@ node_modules/
 # Uploads (temporary files)
 uploads/
 
+# Videos - don't commit any video files
+videos/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.flv
+*.wmv
+*.m4v
+
 # Compressed videos from API tests
 *_compressed_api.mp4
+compressed_from_url.mp4
 
 # Environment variables
 .env
@@ -17,7 +29,12 @@ uploads/
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # Logs
 *.log
 npm-debug.log*
+
+# Temp files
+tmpclaude-*
+nul
