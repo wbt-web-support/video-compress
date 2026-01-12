@@ -1,5 +1,5 @@
 # Video Compressor
-
+# Developed by neeraj
 A web-based video compressor optimized for phone-recorded videos (100MB-1GB). Compress videos directly in your browser with no server uploads required.
 
 ## Features
