@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Compressor - Compress Phone Videos</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Video Compressor</h1>
+            <p class="subtitle">Compress phone-recorded videos (100MB-1GB) directly in your browser</p>
+            <button id="toggleApiDocs" class="api-docs-toggle">📚 View API Documentation</button>
+        </header>
+
+        <!-- API Documentation Section -->
+        <div id="apiDocsSection" class="api-docs-section" style="display: none;">
+            <div class="api-docs-header">
+                <h2>API Documentation</h2>
+                <button id="closeApiDocs" class="close-btn">✕</button>
+            </div>
+
+            <div class="api-docs-content">
+                <div class="api-intro">
+                    <p>Send videos to our API and get compressed versions back. Perfect for integrating video compression into your applications.</p>
+                </div>
+
+                <div class="api-section">
+                    <h3>Endpoint</h3>
+                    <div class="code-block">
+                        <code>POST /api/compress</code>
+                    </div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Parameters</h3>
+                    <table class="api-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Required</th>
+                                <th>Default</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>video</code></td>
+                                <td>file</td>
+                                <td>No*</td>
+                                <td>-</td>
+                                <td>Video file (MP4, MOV, AVI) - *required if url not provided</td>
+                            </tr>
+                            <tr>
+                                <td><code>url</code></td>
+                                <td>string</td>
+                                <td>No*</td>
+                                <td>-</td>
+                                <td>Video URL (direct link or cloud storage) - *required if video not provided</td>
+                            </tr>
+                            <tr>
+                                <td><code>quality</code></td>
+                                <td>number</td>
+                                <td>No</td>
+                                <td>23</td>
+                                <td>CRF value (18-28). Lower = higher quality</td>
+                            </tr>
+                            <tr>
+                                <td><code>resolution</code></td>
+                                <td>string</td>
+                                <td>No</td>
+                                <td>original</td>
+                                <td>Target resolution: original, 1080, 720</td>
+                            </tr>
+                            <tr>
+                                <td><code>preset</code></td>
+                                <td>string</td>
+                                <td>No</td>
+                                <td>medium</td>
+                                <td>Encoding speed: fast, medium, slow</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="api-section">
+                    <h3>Example: cURL (File Upload)</h3>
+                    <div class="code-block">
+                        <pre><code>curl -X POST http://localhost:3001/api/compress \
+  -F "video=@/path/to/video.mp4" \
+  -F "quality=23" \
+  -F "resolution=1080" \
+  -F "preset=medium" \
+  -o compressed_video.mp4</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Example: cURL (From URL)</h3>
+                    <div class="code-block">
+                        <pre><code>curl -X POST http://localhost:3001/api/compress \
+  -F "url=https://example.com/video.mp4" \
+  -F "quality=23" \
+  -F "resolution=1080" \
+  -o compressed_video.mp4</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Example: JavaScript (Fetch API)</h3>
+                    <div class="code-block">
+                        <pre><code>const formData = new FormData();
+formData.append('video', fileInput.files[0]);
+formData.append('quality', '23');
+formData.append('resolution', '1080');
+formData.append('preset', 'medium');
+
+const response = await fetch('http://localhost:3001/api/compress', {
+  method: 'POST',
+  body: formData
+});
+
+const blob = await response.blob();
+const url = URL.createObjectURL(blob);
+// Download or use the compressed video
+const a = document.createElement('a');
+a.href = url;
+a.download = 'compressed_video.mp4';
+a.click();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Example: Python (Requests)</h3>
+                    <div class="code-block">
+                        <pre><code>import requests
+
+with open('video.mp4', 'rb') as f:
+    files = {'video': f}
+    data = {
+        'quality': '23',
+        'resolution': '1080',
+        'preset': 'medium'
+    }
+
+    response = requests.post(
+        'http://localhost:3001/api/compress',
+        files=files,
+        data=data
+    )
+
+    with open('compressed_video.mp4', 'wb') as out:
+        out.write(response.content)</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Response</h3>
+                    <p>Returns the compressed video file as binary data (video/mp4).</p>
+                    <p><strong>Content-Type:</strong> <code>video/mp4</code></p>
+                </div>
+
+                <div class="api-section">
+                    <h3>Other Endpoints</h3>
+                    <div class="endpoint-list">
+                        <div class="endpoint-item">
+                            <code>GET /api/info</code>
+                            <p>Get API information and available endpoints</p>
+                        </div>
+                        <div class="endpoint-item">
+                            <code>GET /api/health</code>
+                            <p>Health check endpoint</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Limits</h3>
+                    <ul>
+                        <li>Maximum file size: 1.5 GB</li>
+                        <li>Supported formats: MP4, MOV, AVI</li>
+                        <li>Processing time: ~1-15 minutes depending on file size</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="section">
+            <!-- Toggle between File and URL -->
+            <div class="upload-mode-toggle">
+                <button id="fileModeBtn" class="mode-btn active">📁 Upload File</button>
+                <button id="urlModeBtn" class="mode-btn">🔗 From URL</button>
+            </div>
+
+            <!-- File Upload Mode -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📹</div>
+                <h2>Drop Video Here</h2>
+                <p>or click to browse</p>
+                <p class="file-limit">Max: 1GB • Formats: MP4, MOV, AVI</p>
+                <input type="file" id="fileInput" accept="video/*" hidden>
+            </div>
+
+            <!-- URL Input Mode -->
+            <div class="url-input-zone" id="urlInputZone" style="display: none;">
+                <div class="upload-icon">🔗</div>
+                <h2>Enter Video URL</h2>
+                <p>Direct link to video file or cloud storage</p>
+                <input type="text" id="urlInput" placeholder="https://example.com/video.mp4" />
+                <button id="urlSubmitBtn" class="primary-btn">Load Video</button>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="settings-panel" id="settingsPanel" style="display: none;">
+                <h3>Compression Settings</h3>
+
+                <div class="setting-group">
+                    <label for="qualityPreset">Quality:</label>
+                    <select id="qualityPreset">
+                        <option value="20">High Quality (CRF 20, larger file)</option>
+                        <option value="23" selected>Balanced (CRF 23, recommended)</option>
+                        <option value="28">Maximum Compression (CRF 28, smaller file)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="resolution">Resolution:</label>
+                    <select id="resolution">
+                        <option value="original" selected>Keep Original</option>
+                        <option value="1080">1080p (Full HD)</option>
+                        <option value="720">720p (HD)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="speed">Speed/Quality:</label>
+                    <select id="speed">
+                        <option value="fast">Fast (lower quality)</option>
+                        <option value="medium" selected>Medium (balanced)</option>
+                        <option value="slow">Slow (better quality)</option>
+                    </select>
+                </div>
+
+                <div class="file-info-preview">
+                    <div class="info-row">
+                        <span>File:</span>
+                        <strong id="previewFileName"></strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Size:</span>
+                        <strong id="previewFileSize"></strong>
+                    </div>
+                </div>
+
+                <button id="startCompressionBtn" class="primary-btn">Start Compression</button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressSection" class="section" style="display: none;">
+            <div class="progress-container">
+                <h2>Compressing Video...</h2>
+
+                <div class="file-info">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-sizes">
+                        <span>Original: <strong id="originalSize"></strong></span>
+                        <span class="arrow">→</span>
+                        <span>Processing...</span>
+                    </div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="progress-text" id="progressText">0%</span>
+                </div>
+
+                <div class="engine-info">
+                    <span id="engineName">FFmpeg.wasm (Multi-threaded)</span>
+                    <span id="statusMessage">Initializing...</span>
+                </div>
+
+                <button id="cancelBtn" class="secondary-btn">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="section" style="display: none;">
+            <div class="results-container">
+                <div class="success-icon">✅</div>
+                <h2>Compression Complete!</h2>
+
+                <div class="size-comparison">
+                    <div class="size-box">
+                        <label>Original</label>
+                        <div class="size-value" id="resultOriginalSize"></div>
+                    </div>
+                    <div class="arrow-large">→</div>
+                    <div class="size-box highlight">
+                        <label>Compressed</label>
+                        <div class="size-value" id="resultCompressedSize"></div>
+                    </div>
+                </div>
+
+                <div class="savings">
+                    <strong id="savingsPercent"></strong> smaller
+                </div>
+
+                <div class="actions">
+                    <button id="downloadBtn" class="primary-btn">
+                        Download Compressed Video
+                    </button>
+                    <button id="compressAnotherBtn" class="secondary-btn">
+                        Compress Another Video
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="section" style="display: none;">
+            <div class="error-container">
+                <div class="error-icon">❌</div>
+                <h2>Compression Failed</h2>
+                <p id="errorMessage" class="error-message"></p>
+                <button id="tryAgainBtn" class="primary-btn">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>All processing happens in your browser. No files are uploaded to any server.</p>
+    </footer>
+
+    <!-- Load modules -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

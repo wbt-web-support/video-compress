@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Uploads (temporary files)
+uploads/
+
+# Compressed videos from API tests
+*_compressed_api.mp4
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
