@@ -210,9 +210,11 @@ router.post('/compress', upload.single('video'), async (req, res) => {
                 // Add Bunny CDN info if upload was successful
                 if (bunnyCdnResult) {
                     const cdnUrl = bunnyCdnResult.cdnUrl || bunnyCdnResult.videoUrl;
+                    // Replace domain in storagePath: wbt-public-videos.b-cdn.net -> wbt-public.b-cdn.net
+                    const storagePath = cdnUrl.replace('wbt-public-videos.b-cdn.net', 'wbt-public.b-cdn.net');
                     responseData.bunnyCdn = {
                         cdnUrl: cdnUrl,
-                        storagePath: cdnUrl, // Complete URL (same as cdnUrl)
+                        storagePath: storagePath,
                         videoId: bunnyCdnResult.videoId,
                         method: bunnyCdnResult.method
                     };
