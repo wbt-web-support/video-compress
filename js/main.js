@@ -16,16 +16,8 @@ class VideoCompressorApp {
      * Set up all event listeners
      */
     initializeEventListeners() {
-        // API docs toggle
-        document.getElementById('toggleApiDocs').addEventListener('click', () => {
-            document.getElementById('apiDocsSection').style.display = 'block';
-            document.getElementById('uploadSection').style.display = 'none';
-        });
-
-        document.getElementById('closeApiDocs').addEventListener('click', () => {
-            document.getElementById('apiDocsSection').style.display = 'none';
-            document.getElementById('uploadSection').style.display = 'block';
-        });
+        // Tab switching
+        this.setupTabSwitching();
 
         // Upload mode toggle (File vs URL)
         document.getElementById('fileModeBtn').addEventListener('click', () => {
@@ -88,6 +80,34 @@ class VideoCompressorApp {
         // Try again button (error state)
         document.getElementById('tryAgainBtn').addEventListener('click', () => {
             this.reset();
+        });
+    }
+
+    /**
+     * Set up tab switching functionality
+     */
+    setupTabSwitching() {
+        const navItems = document.querySelectorAll('.nav-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetTab = item.getAttribute('data-tab');
+
+                // Update active nav item
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+
+                // Show corresponding tab content
+                tabContents.forEach(tab => {
+                    tab.classList.remove('active');
+                });
+
+                const targetTabContent = document.getElementById(`${targetTab}Tab`);
+                if (targetTabContent) {
+                    targetTabContent.classList.add('active');
+                }
+            });
         });
     }
 

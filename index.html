@@ -3,190 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Compressor - Compress Phone Videos</title>
+    <title>Video Compressor</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Video Compressor</h1>
-            <p class="subtitle">Compress phone-recorded videos (100MB-1GB) directly in your browser</p>
-            <button id="toggleApiDocs" class="api-docs-toggle">📚 View API Documentation</button>
-        </header>
-
-        <!-- API Documentation Section -->
-        <div id="apiDocsSection" class="api-docs-section" style="display: none;">
-            <div class="api-docs-header">
-                <h2>API Documentation</h2>
-                <button id="closeApiDocs" class="close-btn">✕</button>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">Video Compressor</h1>
             </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="test">
+                    <span class="nav-icon">🎬</span>
+                    <span class="nav-label">Test</span>
+                </button>
+                <button class="nav-item" data-tab="docs">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-label">Documentation</span>
+                </button>
+            </nav>
+        </aside>
 
-            <div class="api-docs-content">
-                <div class="api-intro">
-                    <p>Send videos to our API and get compressed versions back. Perfect for integrating video compression into your applications.</p>
-                </div>
-
-                <div class="api-section">
-                    <h3>Endpoint</h3>
-                    <div class="code-block">
-                        <code>POST /api/compress</code>
-                    </div>
-                </div>
-
-                <div class="api-section">
-                    <h3>Parameters</h3>
-                    <table class="api-table">
-                        <thead>
-                            <tr>
-                                <th>Parameter</th>
-                                <th>Type</th>
-                                <th>Required</th>
-                                <th>Default</th>
-                                <th>Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><code>video</code></td>
-                                <td>file</td>
-                                <td>No*</td>
-                                <td>-</td>
-                                <td>Video file (MP4, MOV, AVI) - *required if url not provided</td>
-                            </tr>
-                            <tr>
-                                <td><code>url</code></td>
-                                <td>string</td>
-                                <td>No*</td>
-                                <td>-</td>
-                                <td>Video URL (direct link or cloud storage) - *required if video not provided</td>
-                            </tr>
-                            <tr>
-                                <td><code>quality</code></td>
-                                <td>number</td>
-                                <td>No</td>
-                                <td>23</td>
-                                <td>CRF value (18-28). Lower = higher quality</td>
-                            </tr>
-                            <tr>
-                                <td><code>resolution</code></td>
-                                <td>string</td>
-                                <td>No</td>
-                                <td>original</td>
-                                <td>Target resolution: original, 1080, 720</td>
-                            </tr>
-                            <tr>
-                                <td><code>preset</code></td>
-                                <td>string</td>
-                                <td>No</td>
-                                <td>medium</td>
-                                <td>Encoding speed: fast, medium, slow</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="api-section">
-                    <h3>Example: cURL (File Upload)</h3>
-                    <div class="code-block">
-                        <pre><code>curl -X POST http://localhost:3001/api/compress \
-  -F "video=@/path/to/video.mp4" \
-  -F "quality=23" \
-  -F "resolution=1080" \
-  -F "preset=medium" \
-  -o compressed_video.mp4</code></pre>
-                    </div>
-                </div>
-
-                <div class="api-section">
-                    <h3>Example: cURL (From URL)</h3>
-                    <div class="code-block">
-                        <pre><code>curl -X POST http://localhost:3001/api/compress \
-  -F "url=https://example.com/video.mp4" \
-  -F "quality=23" \
-  -F "resolution=1080" \
-  -o compressed_video.mp4</code></pre>
-                    </div>
-                </div>
-
-                <div class="api-section">
-                    <h3>Example: JavaScript (Fetch API)</h3>
-                    <div class="code-block">
-                        <pre><code>const formData = new FormData();
-formData.append('video', fileInput.files[0]);
-formData.append('quality', '23');
-formData.append('resolution', '1080');
-formData.append('preset', 'medium');
-
-const response = await fetch('http://localhost:3001/api/compress', {
-  method: 'POST',
-  body: formData
-});
-
-const blob = await response.blob();
-const url = URL.createObjectURL(blob);
-// Download or use the compressed video
-const a = document.createElement('a');
-a.href = url;
-a.download = 'compressed_video.mp4';
-a.click();</code></pre>
-                    </div>
-                </div>
-
-                <div class="api-section">
-                    <h3>Example: Python (Requests)</h3>
-                    <div class="code-block">
-                        <pre><code>import requests
-
-with open('video.mp4', 'rb') as f:
-    files = {'video': f}
-    data = {
-        'quality': '23',
-        'resolution': '1080',
-        'preset': 'medium'
-    }
-
-    response = requests.post(
-        'http://localhost:3001/api/compress',
-        files=files,
-        data=data
-    )
-
-    with open('compressed_video.mp4', 'wb') as out:
-        out.write(response.content)</code></pre>
-                    </div>
-                </div>
-
-                <div class="api-section">
-                    <h3>Response</h3>
-                    <p>Returns the compressed video file as binary data (video/mp4).</p>
-                    <p><strong>Content-Type:</strong> <code>video/mp4</code></p>
-                </div>
-
-                <div class="api-section">
-                    <h3>Other Endpoints</h3>
-                    <div class="endpoint-list">
-                        <div class="endpoint-item">
-                            <code>GET /api/info</code>
-                            <p>Get API information and available endpoints</p>
-                        </div>
-                        <div class="endpoint-item">
-                            <code>GET /api/health</code>
-                            <p>Health check endpoint</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="api-section">
-                    <h3>Limits</h3>
-                    <ul>
-                        <li>Maximum file size: 1.5 GB</li>
-                        <li>Supported formats: MP4, MOV, AVI</li>
-                        <li>Processing time: ~1-15 minutes depending on file size</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Test Tab Content -->
+            <div id="testTab" class="tab-content active">
         <!-- Upload Section -->
         <div id="uploadSection" class="section">
             <!-- Toggle between File and URL -->
@@ -218,16 +60,16 @@ with open('video.mp4', 'rb') as f:
                 <h3>Compression Settings</h3>
 
                 <div class="setting-group">
-                    <label for="qualityPreset">Quality:</label>
+                            <label for="qualityPreset">Quality</label>
                     <select id="qualityPreset">
-                        <option value="20">High Quality (CRF 20, larger file)</option>
-                        <option value="23" selected>Balanced (CRF 23, recommended)</option>
-                        <option value="28">Maximum Compression (CRF 28, smaller file)</option>
+                                <option value="20">High Quality (CRF 20)</option>
+                                <option value="23" selected>Balanced (CRF 23)</option>
+                                <option value="28">Maximum Compression (CRF 28)</option>
                     </select>
                 </div>
 
                 <div class="setting-group">
-                    <label for="resolution">Resolution:</label>
+                            <label for="resolution">Resolution</label>
                     <select id="resolution">
                         <option value="original" selected>Keep Original</option>
                         <option value="1080">1080p (Full HD)</option>
@@ -236,11 +78,11 @@ with open('video.mp4', 'rb') as f:
                 </div>
 
                 <div class="setting-group">
-                    <label for="speed">Speed/Quality:</label>
+                            <label for="speed">Speed/Quality</label>
                     <select id="speed">
-                        <option value="fast">Fast (lower quality)</option>
-                        <option value="medium" selected>Medium (balanced)</option>
-                        <option value="slow">Slow (better quality)</option>
+                                <option value="fast">Fast</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="slow">Slow</option>
                     </select>
                 </div>
 
@@ -281,7 +123,7 @@ with open('video.mp4', 'rb') as f:
                 </div>
 
                 <div class="engine-info">
-                    <span id="engineName">FFmpeg.wasm (Multi-threaded)</span>
+                            <span id="engineName">FFmpeg.wasm</span>
                     <span id="statusMessage">Initializing...</span>
                 </div>
 
@@ -312,12 +154,8 @@ with open('video.mp4', 'rb') as f:
                 </div>
 
                 <div class="actions">
-                    <button id="downloadBtn" class="primary-btn">
-                        Download Compressed Video
-                    </button>
-                    <button id="compressAnotherBtn" class="secondary-btn">
-                        Compress Another Video
-                    </button>
+                            <button id="downloadBtn" class="primary-btn">Download Compressed Video</button>
+                            <button id="compressAnotherBtn" class="secondary-btn">Compress Another Video</button>
                 </div>
             </div>
         </div>
@@ -333,9 +171,246 @@ with open('video.mp4', 'rb') as f:
         </div>
     </div>
 
-    <footer>
-        <p>All processing happens in your browser. No files are uploaded to any server.</p>
-    </footer>
+            <!-- Documentation Tab Content -->
+            <div id="docsTab" class="tab-content">
+                <div class="docs-container">
+                    <div class="docs-header">
+                        <h2>API Documentation</h2>
+                        <p class="docs-subtitle">Integrate video compression into your applications</p>
+                    </div>
+
+                    <div class="docs-content">
+                        <div class="docs-section">
+                            <h3>Endpoint</h3>
+                            <div class="code-block">
+                                <code>POST /api/compress</code>
+                            </div>
+                        </div>
+
+                        <div class="docs-section">
+                            <h3>Parameters</h3>
+                            <table class="api-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Default</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>video</code></td>
+                                        <td>file</td>
+                                        <td>No*</td>
+                                        <td>-</td>
+                                        <td>Video file (MP4, MOV, AVI) - *required if url not provided</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>url</code></td>
+                                        <td>string</td>
+                                        <td>No*</td>
+                                        <td>-</td>
+                                        <td>Video URL (direct link or cloud storage) - *required if video not provided</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>quality</code></td>
+                                        <td>number</td>
+                                        <td>No</td>
+                                        <td>23</td>
+                                        <td>CRF value (18-28). Lower = higher quality</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>resolution</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>original</td>
+                                        <td>Target resolution: original, 1080, 720</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>preset</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>medium</td>
+                                        <td>Encoding speed: fast, medium, slow</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>uploadToCdn</code></td>
+                                        <td>boolean</td>
+                                        <td>No</td>
+                                        <td>true</td>
+                                        <td>Upload to Bunny CDN (requires credentials in .env)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>cdnFolder</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>compressed-videos</td>
+                                        <td>Folder name in Bunny CDN storage (e.g., "Vaca Insulation")</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>format</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>file</td>
+                                        <td>Response format: "file" (download) or "json" (metadata). Note: If CDN upload is successful, JSON is always returned with video URL.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="docs-section">
+                            <h3>Example: cURL (File Upload with CDN)</h3>
+                            <p><strong>Get JSON Response with CDN URL:</strong></p>
+                            <div class="code-block">
+                                <pre><code>curl -X POST http://localhost:3001/api/compress \
+  -F "video=@/path/to/video.mp4" \
+  -F "quality=23" \
+  -F "resolution=1080" \
+  -F "preset=medium" \
+  -F "cdnFolder=Vaca Insulation" \
+  -F "uploadToCdn=true" \
+  -H "Accept: application/json"</code></pre>
+                            </div>
+                            <p><strong>Download File (CDN disabled):</strong></p>
+                            <div class="code-block">
+                                <pre><code>curl -X POST http://localhost:3001/api/compress \
+  -F "video=@/path/to/video.mp4" \
+  -F "uploadToCdn=false" \
+  -o compressed_video.mp4</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="docs-section">
+                            <h3>Example: cURL (From URL with CDN)</h3>
+                            <div class="code-block">
+                                <pre><code>curl -X POST http://localhost:3001/api/compress \
+  -F "url=https://example.com/video.mp4" \
+  -F "quality=23" \
+  -F "resolution=1080" \
+  -F "cdnFolder=Vaca Insulation" \
+  -F "uploadToCdn=true" \
+  -H "Accept: application/json"</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="docs-section">
+                            <h3>Example: JavaScript (Fetch API)</h3>
+                            <p><strong>With CDN Upload (Returns JSON with Video URL):</strong></p>
+                            <div class="code-block">
+                                <pre><code>const formData = new FormData();
+formData.append('video', fileInput.files[0]);
+formData.append('quality', '23');
+formData.append('resolution', '1080');
+formData.append('preset', 'medium');
+formData.append('cdnFolder', 'Vaca Insulation');
+formData.append('uploadToCdn', 'true');
+
+const response = await fetch('http://localhost:3001/api/compress', {
+  method: 'POST',
+  body: formData
+});
+
+// When CDN upload is successful, response is always JSON
+const data = await response.json();
+console.log('CDN URL:', data.bunnyCdn.cdnUrl);
+// Use the CDN URL directly: data.bunnyCdn.cdnUrl</code></pre>
+                            </div>
+                            <p><strong>Without CDN Upload (Download File):</strong></p>
+                            <div class="code-block">
+                                <pre><code>const formData = new FormData();
+formData.append('video', fileInput.files[0]);
+formData.append('uploadToCdn', 'false');
+
+const response = await fetch('http://localhost:3001/api/compress', {
+  method: 'POST',
+  body: formData
+});
+
+const blob = await response.blob();
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'compressed_video.mp4';
+a.click();</code></pre>
+                            </div>
+                        </div>
+
+                      
+
+                        <div class="docs-section">
+                            <h3>Response</h3>
+                            <p><strong>When CDN Upload is Successful:</strong> Always returns JSON with the video CDN URL (no file download).</p>
+                            <p><strong>When CDN Upload is Disabled:</strong> Returns the compressed video file as binary data (video/mp4) by default, or JSON if <code>format=json</code> is specified.</p>
+                            
+                            <p><strong>JSON Response Example (with CDN upload):</strong></p>
+                            <div class="code-block">
+                                <pre><code>{
+  "success": true,
+  "originalSize": 1048576000,
+  "compressedSize": 157286400,
+  "savings": "85.0%",
+  "originalSizeFormatted": "1000.0 MB",
+  "compressedSizeFormatted": "150.0 MB",
+  "fileName": "video_compressed.mp4",
+  "bunnyCdn": {
+    "cdnUrl": "https://wbt-public.b-cdn.net/vaca-insulation/video_1234567890.mp4",
+    "storagePath": "https://wbt-public.b-cdn.net/vaca-insulation/video_1234567890.mp4",
+    "method": "storage"
+  }
+}</code></pre>
+                            </div>
+                            
+                            <p><strong>Content-Type:</strong> <code>application/json</code> (when CDN upload succeeds) or <code>video/mp4</code> (when CDN upload is disabled and format=file)</p>
+                            
+                            <p><strong>Note:</strong> The <code>cdnUrl</code> in the response is the direct link to the compressed video on Bunny CDN. Use this URL to stream or download the video.</p>
+                        </div>
+
+                        <div class="docs-section">
+                            <h3>Other Endpoints</h3>
+                            <div class="endpoint-list">
+                                <div class="endpoint-item">
+                                    <code>GET /api/info</code>
+                                    <p>Get API information and available endpoints</p>
+                                </div>
+                                <div class="endpoint-item">
+                                    <code>GET /api/health</code>
+                                    <p>Health check endpoint</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="docs-section">
+                            <h3>CDN Configuration</h3>
+                            <p>To configure Bunny CDN, set these environment variables in your <code>.env</code> file:</p>
+                            <div class="code-block">
+                                <pre><code># Bunny Storage (Required for CDN upload)
+BUNNY_STORAGE_ZONE_NAME=your-storage-zone-name
+BUNNY_STORAGE_ZONE_PASSWORD=your-storage-zone-password
+BUNNY_STORAGE_ZONE_REGION=ny  # Optional: ny, uk, la, sg, se, br, jh, syd
+
+# Pull Zone Configuration (Choose one)
+BUNNY_PULL_ZONE_NAME=wbt-public  # Recommended: just the zone name
+# OR
+BUNNY_PULL_ZONE_URL=https://wbt-public.b-cdn.net  # Full URL</code></pre>
+                            </div>
+                            <p><strong>Note:</strong> <code>BUNNY_PULL_ZONE_NAME</code> takes priority over <code>BUNNY_PULL_ZONE_URL</code>. The CDN URL will be constructed as: <code>https://{pullZoneName}.b-cdn.net/{folder}/{filename}</code></p>
+                        </div>
+
+                        <div class="docs-section">
+                            <h3>Limits</h3>
+                            <ul>
+                                <li>Maximum file size: 1.5 GB</li>
+                                <li>Supported formats: MP4, MOV, AVI</li>
+                                <li>Processing time: ~1-15 minutes depending on file size</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <!-- Load modules -->
     <script type="module" src="js/main.js"></script>

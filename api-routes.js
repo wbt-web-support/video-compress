@@ -5,6 +5,7 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { uploadCompressedVideo } = require('./bunny-cdn');
 
 // Set FFmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -91,6 +92,8 @@ async function downloadVideoFromURL(url) {
  *   - quality: CRF value 18-28 (optional, default: 23)
  *   - resolution: Target resolution - original/1080/720 (optional, default: original)
  *   - preset: Encoding preset - fast/medium/slow (optional, default: medium)
+ *   - uploadToCdn: Upload to Bunny CDN - true/false (optional, default: true if credentials configured)
+ *   - format: Response format - json/file (optional, default: file)
  */
 router.post('/compress', upload.single('video'), async (req, res) => {
     let inputPath;
@@ -168,7 +171,7 @@ router.post('/compress', upload.single('video'), async (req, res) => {
                     console.log(`Processing: ${Math.round(progress.percent)}% complete`);
                 }
             })
-            .on('end', () => {
+            .on('end', async () => {
                 const outputSize = fs.statSync(outputPath).size;
                 const savings = ((inputSize - outputSize) / inputSize * 100).toFixed(1);
 
@@ -177,15 +180,65 @@ router.post('/compress', upload.single('video'), async (req, res) => {
                 console.log(`Compressed: ${formatSize(outputSize)}`);
                 console.log(`Savings: ${savings}%`);
 
-                // Send compressed file
-                res.download(outputPath, originalName.replace(path.extname(originalName), '_compressed.mp4'), (err) => {
-                    // Cleanup files after download
-                    cleanup(inputPath, outputPath);
-
-                    if (err) {
-                        console.error('Download error:', err);
+                // Upload to Bunny CDN if configured
+                let bunnyCdnResult = null;
+                const uploadToCdn = req.body.uploadToCdn !== 'false' && req.body.uploadToCdn !== false;
+                const cdnFolder = req.body.cdnFolder || req.body.folder || 'compressed-videos';
+                
+                if (uploadToCdn) {
+                    try {
+                        console.log(`Uploading compressed video to Bunny CDN in folder: ${cdnFolder}...`);
+                        bunnyCdnResult = await uploadCompressedVideo(outputPath, originalName, cdnFolder);
+                        console.log('✅ Bunny CDN upload successful');
+                    } catch (cdnError) {
+                        console.error('⚠️ Bunny CDN upload failed:', cdnError.message);
+                        // Continue even if CDN upload fails - still return the file
                     }
-                });
+                }
+
+                // Prepare response data
+                const responseData = {
+                    success: true,
+                    originalSize: inputSize,
+                    compressedSize: outputSize,
+                    savings: `${savings}%`,
+                    originalSizeFormatted: formatSize(inputSize),
+                    compressedSizeFormatted: formatSize(outputSize),
+                    fileName: originalName.replace(path.extname(originalName), '_compressed.mp4')
+                };
+
+                // Add Bunny CDN info if upload was successful
+                if (bunnyCdnResult) {
+                    const cdnUrl = bunnyCdnResult.cdnUrl || bunnyCdnResult.videoUrl;
+                    responseData.bunnyCdn = {
+                        cdnUrl: cdnUrl,
+                        storagePath: cdnUrl, // Complete URL (same as cdnUrl)
+                        videoId: bunnyCdnResult.videoId,
+                        method: bunnyCdnResult.method
+                    };
+                }
+
+                // If CDN upload was successful, always return JSON with video URL
+                // Otherwise, check if client wants JSON response or file download
+                const acceptHeader = req.headers.accept || '';
+                const wantsJson = acceptHeader.includes('application/json') || req.query.format === 'json' || bunnyCdnResult;
+
+                if (wantsJson || bunnyCdnResult) {
+                    // Return JSON response with CDN URL or download link
+                    res.json(responseData);
+                    // Cleanup files after response
+                    setTimeout(() => cleanup(inputPath, outputPath), 1000);
+                } else {
+                    // Send compressed file as download
+                    res.download(outputPath, responseData.fileName, (err) => {
+                        // Cleanup files after download
+                        cleanup(inputPath, outputPath);
+
+                        if (err) {
+                            console.error('Download error:', err);
+                        }
+                    });
+                }
             })
             .on('error', (err) => {
                 console.error('Compression error:', err);
@@ -255,11 +308,24 @@ router.get('/info', (req, res) => {
                         default: 'medium',
                         options: ['fast', 'medium', 'slow'],
                         description: 'Encoding speed/quality preset'
+                    },
+                    uploadToCdn: {
+                        type: 'boolean',
+                        required: false,
+                        default: true,
+                        description: 'Upload compressed video to Bunny CDN (requires Bunny CDN credentials in .env)'
+                    },
+                    format: {
+                        type: 'string',
+                        required: false,
+                        default: 'file',
+                        options: ['file', 'json'],
+                        description: 'Response format: file (download) or json (metadata with CDN URL)'
                     }
                 },
-                response: 'Binary video file (MP4)',
+                response: 'Binary video file (MP4) or JSON (if format=json)',
                 maxFileSize: '1.5GB',
-                note: 'Provide either a video file OR a URL, not both'
+                note: 'Provide either a video file OR a URL, not both. Bunny CDN upload requires credentials in .env file.'
             }
         }
     });

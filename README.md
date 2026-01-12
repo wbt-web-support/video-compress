@@ -56,6 +56,50 @@ npm run dev
 - Perfect for integrating into applications
 - See API documentation below
 
+## Bunny CDN Integration
+
+After compression, videos can be automatically uploaded to Bunny CDN for fast global delivery.
+
+### Setup Bunny CDN
+
+1. **Create a Bunny.net account** at https://bunny.net
+2. **Choose one of two options:**
+
+   **Option A: Bunny Storage (Recommended for simple file storage)**
+   - Go to https://bunny.net/dashboard/storage
+   - Create a new Storage Zone
+   - Note your Storage Zone Name and Password
+
+   **Option B: Bunny Stream (Recommended for video streaming)**
+   - Go to https://bunny.net/dashboard/stream
+   - Create a new Video Library
+   - Get your Stream API Key and Library ID
+
+3. **Configure environment variables:**
+   - Create a `.env` file in the project root
+   - Add your Bunny CDN credentials:
+
+   ```env
+   # For Bunny Storage
+   BUNNY_STORAGE_ZONE_NAME=your-storage-zone-name
+   BUNNY_STORAGE_ZONE_PASSWORD=your-storage-zone-password
+   BUNNY_STORAGE_ZONE_REGION=ny
+   BUNNY_PULL_ZONE_URL=https://your-pull-zone.b-cdn.net  # Optional
+
+   # OR for Bunny Stream
+   BUNNY_STREAM_API_KEY=your-stream-api-key
+   BUNNY_STREAM_LIBRARY_ID=your-library-id
+   ```
+
+4. **Restart the server** - Bunny CDN upload will now work automatically!
+
+### How It Works
+
+- After compression completes, the video is automatically uploaded to Bunny CDN
+- The API response includes the CDN URL for the compressed video
+- Videos are stored in `compressed-videos/` folder in your storage
+- If CDN upload fails, the file is still returned for download
+
 ## API Documentation
 
 ### Endpoint: Compress Video
@@ -64,7 +108,7 @@ npm run dev
 POST /api/compress
 ```
 
-Compress a video file or video from URL using server-side FFmpeg.
+Compress a video file or video from URL using server-side FFmpeg. Optionally upload to Bunny CDN.
 
 #### Parameters (multipart/form-data or JSON)
 
@@ -75,11 +119,32 @@ Compress a video file or video from URL using server-side FFmpeg.
 | `quality` | number | No | 23 | CRF value (18-28). Lower = higher quality |
 | `resolution` | string | No | original | Target resolution: `original`, `1080`, `720` |
 | `preset` | string | No | medium | Encoding speed: `fast`, `medium`, `slow` |
+| `uploadToCdn` | boolean | No | true | Upload to Bunny CDN (requires credentials in .env) |
+| `format` | string | No | file | Response format: `file` (download) or `json` (metadata with CDN URL) |
 
 **Note:** Provide either a `video` file OR a `url`, not both.
 
 #### Response
-Returns the compressed video file as binary data (video/mp4).
+
+**Default (format=file):** Returns the compressed video file as binary data (video/mp4).
+
+**JSON (format=json):** Returns JSON with compression stats and CDN URL:
+```json
+{
+  "success": true,
+  "originalSize": 1048576000,
+  "compressedSize": 157286400,
+  "savings": "85.0%",
+  "originalSizeFormatted": "1000.0 MB",
+  "compressedSizeFormatted": "150.0 MB",
+  "fileName": "video_compressed.mp4",
+  "bunnyCdn": {
+    "cdnUrl": "https://your-pull-zone.b-cdn.net/compressed-videos/video_1234567890.mp4",
+    "storagePath": "compressed-videos/video_1234567890.mp4",
+    "method": "storage"
+  }
+}
+```
 
 #### Example: cURL (File Upload)
 ```bash
@@ -88,7 +153,17 @@ curl -X POST http://localhost:3001/api/compress \
   -F "quality=23" \
   -F "resolution=1080" \
   -F "preset=medium" \
+  -F "uploadToCdn=true" \
   -o compressed_video.mp4
+```
+
+#### Example: cURL (Get JSON Response with CDN URL)
+```bash
+curl -X POST http://localhost:3001/api/compress \
+  -F "video=@/path/to/video.mp4" \
+  -F "quality=23" \
+  -F "format=json" \
+  -H "Accept: application/json"
 ```
 
 #### Example: cURL (From URL)
@@ -101,7 +176,27 @@ curl -X POST http://localhost:3001/api/compress \
   -o compressed_video.mp4
 ```
 
-#### Example: JavaScript (File Upload)
+#### Example: JavaScript (File Upload with CDN)
+```javascript
+const formData = new FormData();
+formData.append('video', fileInput.files[0]);
+formData.append('quality', '23');
+formData.append('resolution', '1080');
+formData.append('preset', 'medium');
+formData.append('uploadToCdn', 'true');
+formData.append('format', 'json'); // Get JSON response with CDN URL
+
+const response = await fetch('http://localhost:3001/api/compress', {
+  method: 'POST',
+  body: formData
+});
+
+const result = await response.json();
+console.log('Compression stats:', result);
+console.log('CDN URL:', result.bunnyCdn?.cdnUrl);
+```
+
+#### Example: JavaScript (File Download)
 ```javascript
 const formData = new FormData();
 formData.append('video', fileInput.files[0]);
