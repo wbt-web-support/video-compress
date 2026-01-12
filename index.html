@@ -264,7 +264,7 @@
                             <h3>Example: cURL (File Upload with CDN)</h3>
                             <p><strong>Get JSON Response with CDN URL:</strong></p>
                             <div class="code-block">
-                                <pre><code>curl -X POST http://localhost:3001/api/compress \
+                                <pre><code>curl -X POST https://wbt-video-compress.up.railway.app/api/compress \
   -F "video=@/path/to/video.mp4" \
   -F "quality=23" \
   -F "resolution=1080" \
@@ -275,7 +275,7 @@
                             </div>
                             <p><strong>Download File (CDN disabled):</strong></p>
                             <div class="code-block">
-                                <pre><code>curl -X POST http://localhost:3001/api/compress \
+                                <pre><code>curl -X POST https://wbt-video-compress.up.railway.app/api/compress \
   -F "video=@/path/to/video.mp4" \
   -F "uploadToCdn=false" \
   -o compressed_video.mp4</code></pre>
@@ -285,7 +285,7 @@
                         <div class="docs-section">
                             <h3>Example: cURL (From URL with CDN)</h3>
                             <div class="code-block">
-                                <pre><code>curl -X POST http://localhost:3001/api/compress \
+                                <pre><code>curl -X POST https://wbt-video-compress.up.railway.app/api/compress \
   -F "url=https://example.com/video.mp4" \
   -F "quality=23" \
   -F "resolution=1080" \
@@ -307,7 +307,7 @@ formData.append('preset', 'medium');
 formData.append('cdnFolder', 'Vaca Insulation');
 formData.append('uploadToCdn', 'true');
 
-const response = await fetch('http://localhost:3001/api/compress', {
+const response = await fetch('https://wbt-video-compress.up.railway.app/api/compress', {
   method: 'POST',
   body: formData
 });
@@ -323,7 +323,7 @@ console.log('CDN URL:', data.bunnyCdn.cdnUrl);
 formData.append('video', fileInput.files[0]);
 formData.append('uploadToCdn', 'false');
 
-const response = await fetch('http://localhost:3001/api/compress', {
+const response = await fetch('https://wbt-video-compress.up.railway.app/api/compress', {
   method: 'POST',
   body: formData
 });
