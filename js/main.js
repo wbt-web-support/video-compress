@@ -128,6 +128,28 @@ class VideoCompressorApp {
     }
 
     /**
+     * Get video duration in seconds
+     */
+    async getVideoDuration(file) {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            
+            video.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(video.src);
+                resolve(video.duration);
+            };
+            
+            video.onerror = () => {
+                window.URL.revokeObjectURL(video.src);
+                reject(new Error('Could not read video duration'));
+            };
+            
+            video.src = URL.createObjectURL(file);
+        });
+    }
+
+    /**
      * Handle file selection
      */
     async handleFileSelect(file) {
@@ -138,6 +160,21 @@ class VideoCompressorApp {
         try {
             // Validate file
             FFmpegEngine.validateFile(file);
+
+            // Check video duration (maximum 1.5 minutes)
+            try {
+                const duration = await this.getVideoDuration(file);
+                const maxDuration = 90; // 1.5 minutes in seconds
+                
+                if (duration > maxDuration) {
+                    const durationMinutes = (duration / 60).toFixed(1);
+                    alert(`Video duration is too long!\n\nMaximum duration: 1.5 minutes\nYour video Duration: ${durationMinutes} minutes\n\nPlease upload a video that is 1.5 minutes or less.`);
+                    return;
+                }
+            } catch (durationError) {
+                console.warn('Could not read video duration:', durationError);
+                // Continue anyway, backend will validate
+            }
 
             this.currentFile = file;
             this.ui.showFileSelected(file);
@@ -153,6 +190,21 @@ class VideoCompressorApp {
     async startCompression() {
         if (!this.currentFile || this.isProcessing) {
             return;
+        }
+
+        // Double-check duration before starting compression
+        try {
+            const duration = await this.getVideoDuration(this.currentFile);
+            const maxDuration = 90; // 1.5 minutes in secondsgi
+            
+            if (duration > maxDuration) {
+                const durationMinutes = (duration / 60).toFixed(1);
+                alert(`Video duration is too long!\n\nMaximum duration: 1.5 minutes\nYour video Duration: ${durationMinutes} minutes\n\nPlease upload a video that is 1.5 minutes or less.`);
+                return;
+            }
+        } catch (durationError) {
+            console.warn('Could not read video duration:', durationError);
+            // Continue anyway, backend will validate
         }
 
         this.isProcessing = true;

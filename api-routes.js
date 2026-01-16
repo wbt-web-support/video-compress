@@ -22,7 +22,11 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        // Use high-resolution timestamp with random number for better uniqueness in simultaneous uploads
+        const timestamp = Date.now();
+        const random = Math.round(Math.random() * 1E9);
+        const processId = process.pid || 0;
+        const uniqueSuffix = `${timestamp}-${processId}-${random}`;
         cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
@@ -43,6 +47,22 @@ const upload = multer({
 });
 
 /**
+ * Helper function to get video duration in seconds
+ */
+function getVideoDuration(videoPath) {
+    return new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(videoPath, (err, metadata) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            const duration = metadata.format.duration;
+            resolve(duration);
+        });
+    });
+}
+
+/**
  * Helper function to download video from URL
  */
 async function downloadVideoFromURL(url) {
@@ -51,7 +71,11 @@ async function downloadVideoFromURL(url) {
         fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    // Use high-resolution timestamp with random number for better uniqueness in simultaneous uploads
+    const timestamp = Date.now();
+    const random = Math.round(Math.random() * 1E9);
+    const processId = process.pid || 0;
+    const uniqueSuffix = `${timestamp}-${processId}-${random}`;
     const filename = `video-url-${uniqueSuffix}.mp4`;
     const filepath = path.join(uploadDir, filename);
 
@@ -119,6 +143,29 @@ router.post('/compress', upload.single('video'), async (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: 'No video file or URL provided'
+            });
+        }
+
+        // Check video duration (maximum 1.5 minutes)
+        try {
+            const duration = await getVideoDuration(inputPath);
+            const maxDuration = 90; // 1.5 minutes in seconds
+            
+            if (duration > maxDuration) {
+                cleanup(inputPath);
+                return res.status(400).json({
+                    success: false,
+                    error: `Video duration is too long. Maximum duration is 1.5 minutes (${Math.round(duration)}s provided).`
+                });
+            }
+            
+            console.log(`Video duration: ${Math.round(duration)}s (valid)`);
+        } catch (durationError) {
+            console.error('Error getting video duration:', durationError);
+            cleanup(inputPath);
+            return res.status(400).json({
+                success: false,
+                error: 'Could not read video duration. Please ensure the file is a valid video.'
             });
         }
 

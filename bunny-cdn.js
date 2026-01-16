@@ -242,11 +242,15 @@ async function uploadToBunnyStream(filePath, videoTitle = null) {
 async function uploadCompressedVideo(filePath, originalFileName = null, folder = 'compressed-videos') {
     const fileName = originalFileName || path.basename(filePath);
     const baseName = fileName.replace(path.extname(fileName), '');
+    // Use high-resolution timestamp with process ID and random number for better uniqueness in simultaneous uploads
     const timestamp = Date.now();
+    const random = Math.round(Math.random() * 1E9);
+    const processId = process.pid || 0;
+    const uniqueSuffix = `${timestamp}-${processId}-${random}`;
     
     // Normalize folder name (remove leading/trailing slashes, replace spaces with hyphens)
     const normalizedFolder = folder.trim().replace(/^\/+|\/+$/g, '').replace(/\s+/g, '-') || 'compressed-videos';
-    const remotePath = `${normalizedFolder}/${baseName}_${timestamp}.mp4`;
+    const remotePath = `${normalizedFolder}/${baseName}_${uniqueSuffix}.mp4`;
 
     // Check which service is configured
     const hasStorage = process.env.BUNNY_STORAGE_ZONE_NAME && process.env.BUNNY_STORAGE_ZONE_PASSWORD;
